@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App de Recetas</title>
+    <link rel="stylesheet" href="styless.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>App de Recetas 🍽️</h1>
+        
+        <form id="recipe-form">
+            <input type="text" id="title" placeholder="Título de la receta" required>
+            <textarea id="ingredients" placeholder="Ingredientes" required></textarea>
+            <textarea id="preparation" placeholder="Preparación" required></textarea>
+            <button type="submit">Agregar Receta</button>
+        </form>
+
+        <h2>Recetas Favoritas ⭐</h2>
+        <div id="favorite-recipes" class="recipes-list"></div>
+
+        <h2>Recetas</h2>
+        <input type="text" id="search" placeholder="Buscar recetas..." oninput="searchRecipes()">
+        <div id="recipes-container" class="recipes-list"></div>
+        <div id="loading" class="loading" style="display: none;">Cargando recetas...</div>
+    </div>
+
+    <script>
+        const form = document.getElementById('recipe-form');
+        const recipesContainer = document.getElementById('recipes-container');
+        const favoriteRecipesContainer = document.getElementById('favorite-recipes');
+        const loadingIndicator = document.getElementById('loading');
+
+        // Agregar receta
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const ingredients = document.getElementById('ingredients').value;
+            const preparation = document.getElementById('preparation').value;
+
+            const recipe = { title, ingredients, preparation };
+
+            try {
+                const response = await fetch('/api/recipes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(recipe),
+                });
+                if (response.ok) {
+                    form.reset();
+                    loadRecipes();
+                }
+            } catch (error) {
+                console.error('Error al agregar la receta:', error);
+            }
+        });
+
+        // Cargar recetas
+        async function loadRecipes() {
+            loadingIndicator.style.display = 'block'; // Mostrar indicador de carga
+            try {
+                const response = await fetch('/api/recipes');
+                const recipes = await response.json();
+                recipesContainer.innerHTML = '';
+                recipes.forEach(recipe => {
+                    const recipeDiv = document.createElement('div');
+                    recipeDiv.className = 'recipe';
+                    recipeDiv.innerHTML = `
+                        <h2>${recipe.title}</h2>
+                        <h4>Ingredientes:</h4>
+                        <p>${recipe.ingredients}</p>
+                        <h4>Preparación:</h4>
+                        <p>${recipe.preparation}</p>
+                        <div class="rating">
+                            <span class="star" data-value="1">&#9733;</span>
+                            <span class="star" data-value="2">&#9733;</span>
+                            <span class="star" data-value="3">&#9733;</span>
+                            <span class="star" data-value="4">&#9733;</span>
+                            <span class="star" data-value="5">&#9733;</span>
+                        </div>
+                        <button class="favorite-button" onclick="toggleFavorite('${recipe._id}', this)">⭐ Favorito</button>
+                    `;
+                    recipesContainer.appendChild(recipeDiv);
+                });
+            } catch (error) {
+                console.error('Error al cargar recetas:', error);
+            } finally {
+                loadingIndicator.style.display = 'none'; // Ocultar indicador de carga
+            }
+        }
+
+        // Alternar favorito
+        async function toggleFavorite(recipeId, button) {
+            const isFavorited = button.classList.toggle('favorited');
+            button.textContent = isFavorited ? '✅ Favorito' : '⭐ Favorito';
+
+            try {
+                if (isFavorited) {
+                    // Agregar a favoritos
+                    const response = await fetch(`/api/favorites`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ recipeId }),
+                    });
+                    if (!response.ok) {
+                        throw new Error('Error al agregar a favoritos');
+                    }
+                } else {
+                    // Eliminar de favoritos
+                    const response = await fetch(`/api/favorites/${recipeId}`, {
+                        method: 'DELETE',
+                    });
+                    if (!response.ok) {
+                        throw new Error('Error al eliminar de favoritos');
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Buscar recetas
+        function searchRecipes() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const recipeDivs = recipesContainer.getElementsByClassName('recipe');
+            Array.from(recipeDivs).forEach(recipeDiv => {
+                const title = recipeDiv.querySelector('h2').textContent.toLowerCase();
+                recipeDiv.style.display = title.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        // Cargar recetas al inicio
+        loadRecipes();
+    </script>
+</body>
+</html>
