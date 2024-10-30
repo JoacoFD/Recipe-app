@@ -1,7 +1,6 @@
 # App de Recetas 🍽️
 
-Esta es una aplicación web de recetas que permite a los usuarios agregar, buscar y marcar recetas como favoritas. La aplicación utiliza un backend en Flask y una base de datos para almacenar las recetas.
-
+Esta aplicación de recetas permite a los usuarios buscar, agregar y guardar recetas, así como gestionar sus favoritas y calificarlas. Desarrollada con Node.js y MongoDB, cuenta con un backend que permite agregar recetas con título, ingredientes y preparación, buscarlas por nombre, marcar como favoritas y asignar calificaciones de 1 a 5 estrellas, calculando el promedio de cada receta. Esta app es ideal para practicar manipulación de datos en MongoDB, crear endpoints en Node.js y realizar comunicación entre frontend y backend.
 ## Índice
 
 - [Características](#características)
